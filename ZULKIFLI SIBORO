@@ -1,0 +1,54 @@
+CREATE TABLE produk (
+ id INT PRIMARY KEY AUTO_INCREMENT,
+ nama VARCHAR(255) NOT NULL,
+ satuan VARCHAR(50),
+ harga DECIMAL(10,2) NOT NULL,
+ stok INT NOT NULL
+);
+
+/ Konfigurasi koneksi ke database
+const db = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: '',
+    database: 'nama_database'
+});
+
+db.connect((err) => {
+    if (err) throw err;
+    console.log('Connected to database');
+});
+
+// End-point untuk menyimpan produk baru
+app.post('/produk', (req, res) => {
+    const { nama, satuan, harga, stok } = req.body;
+    const query = 'INSERT INTO produk (nama, satuan, harga, stok) VALUES (?, ?, ?, ?)';
+    db.query(query, [nama, satuan, harga, stok], (err, result) => {
+        if (err) throw err;
+        res.status(201).json({ id: result.insertId, ...req.body });
+    });
+});
+
+// End-point untuk menghapus produk berdasarkan ID
+app.delete('/produk/:id', (req, res) => {
+    const { id } = req.params;
+    const query = 'DELETE FROM produk WHERE id = ?';
+    db.query(query, [id], (err, result) => {
+        if (err) throw err;
+        res.status(200).json({ message: 'Produk berhasil dihapus' });
+    });
+});
+
+// End-point untuk menampilkan produk dengan stok lebih dari 0
+app.get('/produk/tersedia', (req, res) => {
+    const query = 'SELECT * FROM produk WHERE stok > 0';
+    db.query(query, (err, results) => {
+        if (err) throw err;
+        res.status(200).json(results);
+    });
+});
+
+const port = 3000;
+app.listen(port, () => {
+    console.log(Server running on port ${port});
+});
